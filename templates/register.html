@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/igb1lIAAAAASUVORK5CYII=">
+    <title>LoginRadius Consent Management - Register</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Register</h1>
+        <form id="registration-form">
+            <label for="register-email">Email:</label>
+            <input type="email" id="register-email" required>
+            <label for="register-password">Password:</label>
+            <input type="password" id="register-password" required>
+            <label>
+                <input type="checkbox" id="consent-checkbox"> I agree to the terms and conditions
+            </label>
+            <button type="button" id="register-button">Register</button>
+        </form>
+        <p>Already have an account? <a href="/">Login here</a></p>
+    </div>
+
+    <!-- Fallback Script for LoginRadius SDK -->
+    <script src="https://auth-dev.lrinternal.com/LoginRadiusV2.js" type="text/javascript" onerror="console.error('LoginRadius SDK failed to load');"></script>
+
+    <script type="text/javascript">
+        var lrloadInterval = setInterval(function () {
+            if (typeof LoginRadiusV2 !== 'undefined') {
+                clearInterval(lrloadInterval);
+                LoginRadiusV2JsLoaded();
+            }
+        }, 200); // Check every 200ms
+
+        function LoginRadiusV2JsLoaded() {
+            var commonOptions = {
+                apiKey: "d838793a-e6c7-436b-aa95-b94255c8222d", // Replace with your API Key
+                hashTemplate: true,
+                sott: "OLexBQwaeiXknIiWWUzrNUPx2n1dQwY/VyTqrUa8NT95k8iIuWF+SyFT7rn37D1SkWwTpE1ZEOIF0wvL65UtKfCc5oZYv7rjLFhElEfAbbk=*730b6179e5fe5333a0b703298ece27a5", // Replace with your SOTT
+                verificationUrl: window.location.href // Update as required
+            };
+
+            var LRObject = new LoginRadiusV2(commonOptions);
+            window.LRObject = LRObject;
+
+            console.log("LRObject initialized: ", LRObject);
+
+            document.getElementById("register-button").addEventListener("click", function () {
+                var email = document.getElementById("register-email").value;
+                var password = document.getElementById("register-password").value;
+                var consent = document.getElementById("consent-checkbox").checked;
+
+                if (!consent) {
+                    alert("You must agree to the terms and conditions.");
+                    return;
+                }
+
+                LRObject.api.registration({
+                    email: email,
+                    password: password,
+                    options: { isConsentGiven: true }
+                }, function (response) {
+                    console.log("Registration Success:", response);
+                    alert("Registration successful!");
+                }, function (error) {
+                    console.error("Registration Error:", error);
+                    alert("Registration failed. Please try again.");
+                });
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/igb1lIAAAAASUVORK5CYII=">
+    <title>LoginRadius Consent Management - Login</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <form id="login-form">
+            <label for="login-email">Email:</label>
+            <input type="email" id="login-email" required>
+            <label for="login-password">Password:</label>
+            <input type="password" id="login-password" required>
+            <button type="button" id="login-button">Login</button>
+        </form>
+        <p>Don't have an account? <a href="/register">Register here</a></p>
+    </div>
+
+    <!-- Fallback Script for LoginRadius SDK -->
+    <script src="https://auth-dev.lrinternal.com/LoginRadiusV2.js" type="text/javascript" onerror="console.error('LoginRadius SDK failed to load');"></script>
+
+    <script type="text/javascript">
+        var lrloadInterval = setInterval(function () {
+            if (typeof LoginRadiusV2 !== 'undefined') {
+                clearInterval(lrloadInterval);
+                LoginRadiusV2JsLoaded();
+            }
+        }, 200); 
+
+        function LoginRadiusV2JsLoaded() {
+            var commonOptions = {
+                apiKey: "d838793a-e6c7-436b-aa95-b94255c8222d",
+                hashTemplate: true,
+                sott: "reFACwNWk3LK%2fDowezfW9dZdLTgUlFZfTLOVwVBlI585ka%2bj1Oa8nlXSVLgILRyi7RCxUlFcXF0zzOBUIT1rINZwDg0dQORb%2bSYtDsXx8BI%3d*d207e50982c691780a79d930d3e72ac6", 
+                verificationUrl: window.location.href 
+            };
+
+            var LRObject = new LoginRadiusV2(commonOptions);
+            window.LRObject = LRObject;
+
+            console.log("LRObject initialized: ", LRObject);
+
+            document.getElementById("login-button").addEventListener("click", function () {
+                var email = document.getElementById("login-email").value;
+                var password = document.getElementById("login-password").value;
+
+                LRObject.api.login({
+                    email: email,
+                    password: password
+                }, function (response) {
+                    console.log("Login Success:", response);
+                    alert("Login successful!");
+                },   function (error) {
+                    console.log("Login Error:", error);
+                    // console.log(error[0].Description)
+                    alert(error[0].Description);
+
+                    if (error[0].ErrorCode == 1226) {  
+                        localStorage.setItem('consentToken', error[0].Data.ConsentToken);
+                        // var consentToken = error[0].Data.ConsentToken;
+                        fetch("https://config-dev.lrinternal.com/ciam/consent?apiKey=d838793a-e6c7-436b-aa95-b94255c8222d", {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            
+                        }).then(response => response.json()).then(data => {
+                            console.log('Success:', data);
+                            localStorage.setItem('consentData', JSON.stringify(data));
+                            window.location.href = '/consent';
+    
+                        }).catch((error) => {
+                            console.error('Error:', error);
+                        });
+                    }
+
+                });
+            });
+        }
+    </script>
+</body>
+</html>

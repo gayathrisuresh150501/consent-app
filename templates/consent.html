@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/igb1lIAAAAASUVORK5CYII=">
+    <title>Consent Form</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Consent Form</h1>
+        <div id="consent-container"></div>
+        <button id="submit-consent">Submit Consent</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var consentData = JSON.parse(localStorage.getItem('consentData'));
+            var consentToken = localStorage.getItem('consentToken'); // Retrieve the consent token
+
+            if (consentData) {
+                var container = document.getElementById('consent-container');
+                consentData.forEach(function(entry) {
+                    if (entry.ConsentForm) {
+                        entry.ConsentForm.forEach(function(consentForm) {
+                            consentForm.Consents.forEach(function(consent) {
+                                var consentDiv = document.createElement('div');
+                                consentDiv.innerHTML = `
+                                    <h3>${consent.Title}</h3>
+                                    <p>${consent.Description} <input name="${consent.Id}" type="checkbox"></p>
+                                `;
+                                container.appendChild(consentDiv);
+                            });
+                        });
+                    }
+                    // Render Terms of Service and Privacy Policy once per entry
+                    var tosDiv = document.createElement('div');
+                    tosDiv.innerHTML = `
+                        <h3>Terms Of Service</h3>
+                        <p>${entry.TermOfService || 'Not provided'}</p>
+                        <h3>Privacy Policy</h3>
+                        <p>${entry.PrivacyPolicy || 'Not provided'}</p>
+                    `;
+                    container.appendChild(tosDiv);
+                });
+            } else {
+                console.error('Consent data is not available or malformed.');
+            }
+
+            document.getElementById('submit-consent').addEventListener('click', function() {
+                var consentOptions = [];
+                var checkboxes = document.querySelectorAll('#consent-container input[type="checkbox"]');
+                checkboxes.forEach(function(checkbox) {
+                    consentOptions.push({
+                        ConsentOptionId: checkbox.name,
+                        IsAccepted: checkbox.checked
+                    });
+                });
+
+                var postData = {
+                    Events: [
+                        {
+                            Event: "Login",
+                            IsCustom: false
+                        }
+                    ],
+                    Data: consentOptions
+                };
+
+                fetch('https://devapi.lrinternal.com/identity/v2/auth/consent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + consentToken
+                    },
+                    body: JSON.stringify(postData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    alert('Consent submitted successfully!');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Consent submission failed.');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
