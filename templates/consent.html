@@ -26,9 +26,10 @@
                         entry.ConsentForm.forEach(function(consentForm) {
                             consentForm.Consents.forEach(function(consent) {
                                 var consentDiv = document.createElement('div');
+                                consentDiv.className = 'checkbox-container';
                                 consentDiv.innerHTML = `
-                                    <h3>${consent.Title}</h3>
-                                    <p>${consent.Description} <input name="${consent.Id}" type="checkbox"></p>
+                                    <input name="${consent.ConsentId}" type="checkbox" data-event="${entry.Events[0].Name}" data-is-custom="${entry.Events[0].IsCustom}">
+                                    <p>${consent.Description}</p>
                                 `;
                                 container.appendChild(consentDiv);
                             });
@@ -61,14 +62,19 @@
                 var postData = {
                     Events: [
                         {
-                            Event: "Login",
-                            IsCustom: false
+                            Event: checkboxes[0].getAttribute('data-event'),
+                            IsCustom: checkboxes[0].getAttribute('data-is-custom') === 'true'
                         }
                     ],
                     Data: consentOptions
                 };
 
-                fetch('https://devapi.lrinternal.com/identity/v2/auth/consent', {
+                // Construct the URL with query parameters
+                var url = new URL('https://devapi.lrinternal.com/identity/v2/auth/consent');
+                url.searchParams.append('apiKey', 'd838793a-e6c7-436b-aa95-b94255c8222d');
+                url.searchParams.append('consentToken', consentToken);
+
+                fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
